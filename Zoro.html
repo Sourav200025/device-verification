@@ -1,0 +1,260 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verification</title>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Segoe UI, sans-serif;
+}
+
+body{
+    height:100vh;
+    background:url("background.jpg") no-repeat center center/cover; 
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:#fff;
+}
+
+/* Profile */
+.profile{
+    position:absolute;
+    top:20px;
+    left:20px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.profile img{
+    width:55px;
+    height:55px;
+    border-radius:50%;
+    object-fit:cover;
+    background:#222;
+}
+
+.user-info{
+    display:flex;
+    flex-direction:column;
+}
+
+.status{
+    margin-left:20px;
+    font-size:12px;
+    color:#00ff99;
+}
+
+/* Card */
+.card{
+    width:90%;
+    height:70%;
+    background:url("card.jpg") no-repeat center center/cover;
+    border-radius:35px;
+    padding:45px 30px;
+    text-align:center;
+    box-shadow:0 0 60px rgba(0,255,150,0.12);
+    stroke-width:20%;
+    stroke:;
+}
+
+/* Circle */
+.circle{
+    width:130px;
+    height:130px;
+    margin:0 auto 25px;
+    border-radius:50%;
+    position:relative;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.circle::before,
+.circle::after{
+    content:'';
+    position:absolute;
+    width:100px;
+    height:100px;
+    border-radius:50%;
+    border:3px solid #00ff99;
+    animation:pulse 2s infinite;
+}
+
+.circle::after{
+    animation-delay:.9s;
+}
+
+@keyframes pulse{
+    0%{transform:scale(1);opacity:1;}
+    100%{transform:scale(1.6);opacity:0;}
+}
+
+.tick{
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    background:#00ff99;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    box-shadow:0 0 25px #00ff99;
+    opacity:0;
+    transition:.5s;
+}
+
+.tick svg{
+    width:60%;
+    stroke:#fff;
+    stroke-width:7;
+    fill:none;
+    stroke-dasharray:95;
+    stroke-dashoffset:100;
+    transition:.6s ease;
+}
+
+h2{
+    color:#00ff99;
+    height:5%;
+    margin-top:15px;
+    opacity:0;
+    transition:.4s;
+}
+
+p{
+    margin-top:8px;
+    color:#ccc;
+    font-size:14px;
+    opacity:0;
+    transition:.4s;
+}
+
+button{
+    width:100%;
+    margin-top:25px;
+    padding:15px;
+    border:none;
+    border-radius:30px;
+    background:#00ff99;
+    color:#000;
+    font-weight:bold;
+    letter-spacing:2px;
+    cursor:pointer;
+    box-shadow:0 0 20px #00ff99;
+    opacity:0;
+    transition:.4s;
+}
+
+/* Failed state */
+.failed .circle::before,
+.failed .circle::after{
+    border-color:red;
+}
+
+.failed .tick{
+    background:red;
+    box-shadow:0 0 35px red;
+}
+
+.failed h2{
+    color:red;
+}
+
+.message{
+    margin-top:12px;
+    font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="profile">
+    <img id="profilePic">
+    <div class="user-info">
+        <strong id="profileName"></strong>
+        <small id="profileId"></small>
+    </div>
+    <div class="status">● ACTIVE</div>
+</div>
+
+<div class="card" id="card">
+
+    <div class="circle">
+        <div class="tick">
+            <svg viewBox="0 0 52 52">
+                <path d="M14 27 L22 35 L38 18"/>
+            </svg>
+        </div>
+    </div>
+
+    <div id="loadingText">Verifying...</div>
+
+    <h2 id="titleText">Verified Successfully</h2>
+    <p id="subText">You're verified successfully, you can use our bot now.</p>
+
+    <div class="message" id="extraMsg"></div>
+
+    <button id="continueBtn">CONTINUE TO BOT</button>
+
+</div>
+
+<script>
+const tg = window.Telegram.WebApp;
+tg.expand();
+
+const user = tg.initDataUnsafe?.user;
+
+if(user){
+    document.getElementById("profileName").innerText =
+        user.first_name + (user.last_name ? " " + user.last_name : "");
+    document.getElementById("profileId").innerText =
+        "ID: " + user.id;
+    if(user.photo_url){
+        document.getElementById("profilePic").src = user.photo_url;
+    }
+}
+
+function showVerified(){
+    document.querySelector(".tick").style.opacity="1";
+    document.querySelector(".tick svg").style.strokeDashoffset="0";
+    document.getElementById("loadingText").style.display="none";
+
+    document.getElementById("titleText").style.opacity="1";
+    document.getElementById("subText").style.opacity="1";
+    document.getElementById("continueBtn").style.opacity="1";
+}
+
+function showFailed(message){
+    const card = document.getElementById("card");
+    card.classList.add("failed");
+
+    document.querySelector(".tick").style.opacity="1";
+    document.querySelector(".tick svg").style.strokeDashoffset="0";
+
+    document.getElementById("loadingText").style.display="none";
+    document.getElementById("titleText").innerText="Verification Failed";
+    document.getElementById("subText").style.display="none";
+    document.getElementById("titleText").style.opacity="1";
+    document.getElementById("extraMsg").innerText=message;
+}
+
+setTimeout(()=>{
+    if(!navigator.onLine){
+        showFailed("No internet connection");
+    }else{
+        showVerified();
+    }
+},2500);
+</script>
+
+</body>
+</html>
